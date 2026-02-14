@@ -235,6 +235,114 @@
       padding:8px 10px;
       border-radius:12px;
       backdrop-filter: blur(8px);
+      z-index:5;
+    }
+
+    .hint-mobile{ display:none; }
+
+    /* ===== MOBILE ===== */
+    @media (max-width: 768px){
+      .wrap{ padding:8px; }
+
+      .stage{
+        width:100vw;
+        height:100vh;
+        height:100dvh;
+        border-radius:0;
+        border:none;
+      }
+
+      .topbar{
+        height:42px;
+        padding:0 10px;
+      }
+
+      .dot{ width:10px; height:10px; }
+
+      .filename span:first-child{ display:none; }
+      .filename{ font-size:11px; }
+      .badge{ font-size:10px; padding:4px 8px; }
+
+      .grid{
+        inset:42px 0 0 0;
+        grid-template-columns: 38px 1fr;
+        height:calc(100% - 42px);
+      }
+
+      .gutter{
+        font-size:10px;
+        padding:10px 0;
+        line-height:18px;
+      }
+      .gutter div{ padding:0 8px; }
+
+      .editor{
+        font-size:11px;
+        line-height:18px;
+        padding:10px 10px;
+        word-break:break-all;
+      }
+
+      .cursor{
+        width:7px;
+        height:14px;
+      }
+
+      .reveal{ inset:42px 0 0 0; }
+
+      .card{
+        width:92%;
+        padding:20px 16px 18px;
+        border-radius:14px;
+        max-height:80vh;
+        max-height:80dvh;
+        overflow-y:auto;
+      }
+
+      .big{
+        font-size: clamp(24px, 7vw, 40px);
+        margin:0 0 8px 0;
+      }
+
+      .sub{
+        font-size: clamp(14px, 3.5vw, 18px);
+      }
+
+      canvas{
+        inset:42px 0 0 0;
+        height:calc(100% - 42px);
+      }
+
+      .hint{
+        bottom:8px;
+        right:8px;
+        font-size:10px;
+        padding:6px 8px;
+      }
+      .hint-desktop{ display:none; }
+      .hint-mobile{ display:block; }
+    }
+
+    /* Extra small phones (iPhone SE, etc) */
+    @media (max-width: 380px){
+      .editor{ font-size:10px; line-height:16px; }
+      .gutter{ font-size:9px; line-height:16px; }
+      .grid{ grid-template-columns: 32px 1fr; }
+      .big{ font-size: clamp(20px, 6vw, 32px); }
+      .sub{ font-size: clamp(12px, 3vw, 16px); }
+      .card{ padding:16px 12px 14px; }
+    }
+
+    /* Landscape phones */
+    @media (max-height: 500px) and (orientation: landscape){
+      .stage{ height:100vh; height:100dvh; }
+      .topbar{ height:36px; }
+      .grid{ inset:36px 0 0 0; height:calc(100% - 36px); }
+      .reveal{ inset:36px 0 0 0; }
+      .canvas{ inset:36px 0 0 0; height:calc(100% - 36px); }
+      .card{ padding:12px 14px 10px; }
+      .big{ font-size: clamp(18px, 4vw, 28px); margin:0 0 4px 0; }
+      .sub{ font-size: clamp(12px, 2vw, 16px); }
     }
   </style>
 </head>
@@ -272,7 +380,8 @@
         </div>
       </div>
 
-      <div class="hint">Tip: press <b>R</b> or tap the card to replay</div>
+      <div class="hint hint-desktop">Tip: press <b>R</b> or tap to replay</div>
+      <div class="hint hint-mobile">Tap the card to replay</div>
     </div>
   </div>
 
@@ -409,7 +518,7 @@
         // reveal message + ramp up hearts
         setTimeout(() => {
           reveal.classList.add("show");
-          hearts.burst(260);
+          hearts.burst(isMobile ? 80 : 260);
         }, 420);
         return;
       }
@@ -528,11 +637,13 @@
         if(p.age >= p.life) particles.splice(i,1);
       }
 
-      // keep a gentle flow once reveal is visible
+      // keep a gentle flow once reveal is visible (fewer on mobile)
+      const rate = isMobile ? 0.15 : 0.28;
+      const ambientRate = isMobile ? 0.05 : 0.10;
       if(reveal.classList.contains("show")){
-        if(Math.random() < 0.28) spawn(2);
+        if(Math.random() < rate) spawn(isMobile ? 1 : 2);
       } else {
-        if(Math.random() < 0.10) spawn(1);
+        if(Math.random() < ambientRate) spawn(1);
       }
 
       requestAnimationFrame(step);
@@ -554,12 +665,22 @@
   hearts.start();
   reset();
 
+  // Mobile detection
+  const isMobile = window.innerWidth <= 768;
+
   // Replay (keyboard + touch/click)
   window.addEventListener("keydown", (e) => {
     if(e.key.toLowerCase() === "r") reset();
   });
-  reveal.addEventListener("click", () => reset());
-  reveal.addEventListener("touchstart", () => reset());
+  reveal.addEventListener("click", (e) => { e.preventDefault(); reset(); });
+  reveal.addEventListener("touchend", (e) => { e.preventDefault(); reset(); });
+
+  // Prevent iOS rubber-banding / pull-to-refresh
+  document.body.addEventListener("touchmove", (e) => {
+    if(!e.target.closest(".editor") && !e.target.closest(".card")){
+      e.preventDefault();
+    }
+  }, { passive: false });
 })();
 </script>
 </body>
