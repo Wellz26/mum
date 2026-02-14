@@ -339,7 +339,7 @@
       .topbar{ height:36px; }
       .grid{ inset:36px 0 0 0; height:calc(100% - 36px); }
       .reveal{ inset:36px 0 0 0; }
-      .canvas{ inset:36px 0 0 0; height:calc(100% - 36px); }
+      canvas{ inset:36px 0 0 0; height:calc(100% - 36px); }
       .card{ padding:12px 14px 10px; }
       .big{ font-size: clamp(18px, 4vw, 28px); margin:0 0 4px 0; }
       .sub{ font-size: clamp(12px, 2vw, 16px); }
@@ -658,15 +658,15 @@
     };
   })();
 
+  // Mobile detection (MUST be before hearts.start which calls step() using isMobile)
+  const isMobile = window.innerWidth <= 768;
+
   // init sizes + loops
   fx.reset();
   window.addEventListener("resize", () => fx.reset());
 
   hearts.start();
   reset();
-
-  // Mobile detection
-  const isMobile = window.innerWidth <= 768;
 
   // Replay (keyboard + touch/click)
   window.addEventListener("keydown", (e) => {
